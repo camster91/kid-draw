@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.eslintcache
+*.log
+.DS_Store
+ios
+android
+.vscode
+.idea
+README.md
