@@ -1,0 +1,15 @@
+{
+  "coolify_url": "http://187.77.26.99:8000",
+  "api_token_env": "COOLIFY_API_TOKEN",
+  "project_name": "Ashbi",
+  "repo": "ashbi/kid-draw",
+  "branch": "main",
+  "app_name": "kid-draw",
+  "domain": "kiddraw.ashbi.ca",
+  "port": 8080,
+  "basicauth_user": "family",
+  "basicauth_pass_env": "KIDDRAW_BASICAUTH",
+  "public_paths": ["/"],
+  "health_check_path": "/",
+  "env_vars": {}
+}
