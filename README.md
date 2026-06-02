@@ -23,9 +23,30 @@ This machine has only CommandLineTools. Run the Xcode steps on your Mac.
 
 ## Web Deploy (Coolify)
 
-1. Create the GitHub repo: `ashbi/kid-draw`
-2. Push: `git remote add origin git@github.com:ashbi/kid-draw.git && git push -u origin main`
-3. Set Coolify token: `export COOLIFY_API_TOKEN=...`
+The kid-draw app is a static SPA (Vite output). Two deploy paths:
+
+### Path A: Static export to a CDN (simplest)
+
+Vite's `dist/` folder is fully self-contained. Upload to any static host:
+- **Cloudflare Pages**: connect `camster91/kid-draw` repo, build command `npm run build`, output `dist`
+- **Netlify**: same
+- **Vercel**: same
+- **GitHub Pages**: `npm i -D gh-pages && npx gh-pages -d dist`
+
+### Path B: Coolify (Dockerfile)
+
+The included `Dockerfile` builds the Vite app and serves it with nginx-unprivileged.
+
+1. Make sure the Coolify API token in `~/projects/signalfilms-migration/.cf` is current (it may have expired — re-create one in the Coolify UI if you get 401s)
+2. Deploy: `python3 ~/projects/coolify-deploy-tool/coolify-deploy.py --config deploy-config.json`
+3. Coolify will:
+   - Create the app in the "Ashbi" project (project_uuid from `GET /projects`)
+   - Add a `kid-draw.ashbi.ca` domain
+   - Build via the Dockerfile
+   - Set up BasicAuth (`family` user, password from `KIDDRAW_BASICAUTH` env)
+4. DNS: point `kiddraw.ashbi.ca` to 187.77.26.99 after deploy is healthy
+
+**App UUID after deploy** will be in the deploy logs — the URL is `https://<app-uuid>.187.77.26.99.sslip.io` until DNS is set.
 4. Set basicauth: `export KIDDRAW_BASICAUTH=...`
 5. Deploy: `python3 ~/projects/coolify-deploy-tool/coolify-deploy.py --config deploy-config.json`
 
