@@ -255,3 +255,12 @@
 @keyframes fadeOut {
   to { opacity: 0; }
 }
+
+/* ---------- iPhone responsive (only matters when iPhone support is added) ---------- */
+@media (max-width: 700px) {
+  .palette-row { flex-wrap: wrap; justify-content: center; row-gap: 8px; }
+  .swatch { flex: 0 0 calc((100% - 60px) / 8); max-width: none; }
+  .size-row { flex-wrap: wrap; }
+  .size-btn { flex: 0 0 calc(100% / 5); }
+  .tool-rail { max-height: calc(100vh - 280px); }
+}

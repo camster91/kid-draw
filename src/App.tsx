@@ -222,6 +222,9 @@ function App() {
     if (!ctx) return
     const p = pt(e)
     const last = lastPtRef.current ?? p
+    // Reset alpha every move so tool switches don't leak each other's
+    // globalAlpha value (e.g. marker at 0.55 weakening the eraser).
+    ctx.globalAlpha = 1
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.lineWidth = size
@@ -234,8 +237,6 @@ function App() {
       if (tool === 'marker') {
         ctx.globalAlpha = 0.55
         ctx.lineWidth = size * 1.4
-      } else {
-        ctx.globalAlpha = 1
       }
     }
     ctx.beginPath()
@@ -282,21 +283,31 @@ function App() {
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png')
     )
     const file = new File([blob], `kid-draw-${Date.now()}.png`, { type: 'image/png' })
-    const url = URL.createObjectURL(file)
-    // Try native share (iPad share sheet, falls back to download)
     const navAny = navigator as unknown as { canShare?: (d: { files: File[] }) => boolean; share?: (d: ShareData) => Promise<void> }
-    if (navAny.canShare?.({ files: [file] })) {
+    // Try native share (iPad share sheet). Some Mac browsers report
+    // canShare=true but reject the share() call — fall through to
+    // download in that case so the user always gets the file.
+    if (navAny.canShare?.({ files: [file] }) && navAny.share) {
       try {
-        await navAny.share?.({ files: [file], title: 'My Drawing' })
+        await navAny.share({ files: [file], title: 'My Drawing' })
         sfx.done()
         setShowSaved(true)
         setTimeout(() => setShowSaved(false), 1800)
         return
-      } catch { /* user cancelled */ }
+      } catch { /* user cancelled or share unavailable — fall through to download */ }
     }
-    // Fallback: open in new tab
-    window.open(url, '_blank')
+    // Fallback: trigger a download via a hidden <a download> click.
+    const url = URL.createObjectURL(file)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.name
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
     sfx.done()
+    setShowSaved(true)
+    setTimeout(() => setShowSaved(false), 1800)
   }
 
   const selectColor = (c: string) => { setColor(c); sfx.tap() }
@@ -373,6 +384,7 @@ function App() {
                   key={t.id}
                   className={`template-btn ${template.id === t.id ? 'selected' : ''}`}
                   onClick={() => { setTemplate(t); setShowTemplates(false); sfx.pop() }}
+                  aria-label={`${t.id} template`}
                 >
                   <span style={{ fontSize: 48 }}>{t.label}</span>
                 </button>
